@@ -39,6 +39,10 @@
       </div>
 
       <div class="flex flex-wrap items-center gap-2">
+        <button onclick="openFormModal()" class="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 shadow-md">
+          <i class="fa-solid fa-plus"></i>
+          <span>Buat Serah Terima Baru</span>
+        </button>
         <button onclick="fetchCloudData()" title="Sinkronisasi Cloud Data" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-sm">
           <i class="fa-solid fa-rotate text-red-400" id="syncIcon"></i>
           <span class="hidden sm:inline">Sync Cloud</span>
@@ -68,240 +72,228 @@
           <p class="text-xs font-medium text-slate-500 uppercase">Total Handover</p>
           <h3 id="statTotal" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
         </div>
-        <div class="bg-slate-100 text-slate-700 p-3 rounded-full">
-          <i class="fa-solid fa-clipboard-list text-xl"></i>
-        </div>
+        <div class="bg-slate-100 text-slate-700 p-3 rounded-full"><i class="fa-solid fa-clipboard-list text-xl"></i></div>
       </div>
-
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between border-l-4 border-l-amber-500">
         <div>
           <p class="text-xs font-medium text-slate-500 uppercase">Status Pending</p>
           <h3 id="statPending" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
         </div>
-        <div class="bg-amber-50 text-amber-600 p-3 rounded-full">
-          <i class="fa-solid fa-clock text-xl"></i>
-        </div>
+        <div class="bg-amber-50 text-amber-600 p-3 rounded-full"><i class="fa-solid fa-clock text-xl"></i></div>
       </div>
-
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between border-l-4 border-l-red-600">
         <div>
           <p class="text-xs font-medium text-slate-500 uppercase">Prioritas High/Urgent</p>
           <h3 id="statUrgent" class="text-2xl font-bold text-red-600 mt-1">0</h3>
         </div>
-        <div class="bg-red-50 text-red-600 p-3 rounded-full">
-          <i class="fa-solid fa-triangle-exclamation text-xl"></i>
-        </div>
+        <div class="bg-red-50 text-red-600 p-3 rounded-full"><i class="fa-solid fa-triangle-exclamation text-xl"></i></div>
       </div>
-
       <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between border-l-4 border-l-emerald-600">
         <div>
           <p class="text-xs font-medium text-slate-500 uppercase">Selesai (Done)</p>
           <h3 id="statCompleted" class="text-2xl font-bold text-emerald-600 mt-1">0</h3>
         </div>
-        <div class="bg-emerald-50 text-emerald-600 p-3 rounded-full">
-          <i class="fa-solid fa-circle-check text-xl"></i>
-        </div>
+        <div class="bg-emerald-50 text-emerald-600 p-3 rounded-full"><i class="fa-solid fa-circle-check text-xl"></i></div>
       </div>
     </div>
 
-    <!-- MAIN FORM & TABLE SECTION -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <!-- TABLE LOGS (FULL WIDTH) -->
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+      <div>
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-slate-100 pb-4 mb-4 no-print">
+          <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-slate-700"></i>
+            Daftar Catatan Handover Shift
+          </h2>
 
-      <!-- FORM ADD LOG -->
-      <div class="lg:col-span-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm no-print self-start">
-        <h2 class="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3 mb-4 flex items-center gap-2">
-          <i class="fa-solid fa-square-plus text-red-700"></i>
-          Form Input Serah Terima
-        </h2>
+          <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+            <select id="filterDept" onchange="renderLogs()" class="text-xs border border-slate-300 rounded-lg p-2 focus:outline-none bg-slate-50">
+              <option value="ALL">Semua Divisi</option>
+              <option value="Inbound">Inbound</option>
+              <option value="Outbound">Outbound</option>
+              <option value="RMA">RMA</option>
+              <option value="Dispatch">Dispatch</option>
+              <option value="Inventory">Inventory</option>
+              <option value="POD">POD</option>
+            </select>
 
-        <form id="handoverForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
-          <input type="hidden" id="editLogId">
+            <select id="filterShift" onchange="renderLogs()" class="text-xs border border-slate-300 rounded-lg p-2 focus:outline-none bg-slate-50">
+              <option value="ALL">Semua Shift</option>
+              <option value="Shift 1">Shift 1</option>
+              <option value="Shift 2">Shift 2</option>
+              <option value="Shift 3">Shift 3</option>
+            </select>
 
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Tanggal & Shift</label>
-            <div class="grid grid-cols-2 gap-2">
-              <input type="date" id="formDate" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
-              <select id="formShift" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
-                <option value="Shift 1">Shift 1 (Pagi)</option>
-                <option value="Shift 2">Shift 2 (Siang)</option>
-                <option value="Shift 3">Shift 3 (Malam)</option>
-              </select>
-            </div>
+            <select id="filterStatus" onchange="renderLogs()" class="text-xs border border-slate-300 rounded-lg p-2 focus:outline-none bg-slate-50">
+              <option value="ALL">Semua Status</option>
+              <option value="Pending">Pending</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Done">Done</option>
+            </select>
+
+            <input type="text" id="filterSearch" onkeyup="renderLogs()" placeholder="Cari Part No / Petugas..." class="text-xs border border-slate-300 rounded-lg p-2 focus:outline-none w-full md:w-44">
           </div>
+        </div>
 
-          <!-- DIVISI PENGIRIM & TUJUAN -->
-          <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-3">
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Divisi Asal (Pengirim)</label>
-              <select id="formFromDept" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none bg-white">
-                <option value="Inbound">Inbound</option>
-                <option value="Outbound">Outbound</option>
-                <option value="RMA">RMA</option>
-                <option value="Dispatch">Dispatch</option>
-                <option value="Inventory">Inventory</option>
-                <option value="POD">POD</option>
-              </select>
-            </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-800 text-white text-xs uppercase tracking-wider">
+                <th class="p-3 rounded-tl-lg">Tgl / Shift</th>
+                <th class="p-3">Alur Divisi</th>
+                <th class="p-3">Kategori & Part No</th>
+                <th class="p-3">Petugas (Serah ➔ Terima)</th>
+                <th class="p-3 text-center">Prioritas</th>
+                <th class="p-3 text-center">Foto</th>
+                <th class="p-3 text-center">Status (Klik Ubah)</th>
+                <th class="p-3 text-center rounded-tr-lg no-print">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="logTableBody" class="divide-y divide-slate-200 text-xs text-slate-700">
+              <!-- DYNAMICALLY RENDERED -->
+            </tbody>
+          </table>
+        </div>
 
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Divisi Tujuan (Tindak Lanjut)</label>
-              <select id="formToDept" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none bg-white">
-                <option value="Inbound">Inbound</option>
-                <option value="Outbound">Outbound</option>
-                <option value="RMA">RMA</option>
-                <option value="Dispatch">Dispatch</option>
-                <option value="Inventory">Inventory</option>
-                <option value="POD">POD</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Petugas Serah</label>
-              <input type="text" id="formSender" placeholder="Nama Petugas" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Petugas Terima</label>
-              <input type="text" id="formReceiver" placeholder="Nama Penerima" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Kategori Isu</label>
-              <select id="formCategory" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
-                <option value="Stock Discrepancy">Stock Discrepancy</option>
-                <option value="Pending Putaway">Pending Putaway</option>
-                <option value="Inbound/Outbound Delay">Inbound/Outbound Delay</option>
-                <option value="RMA / Item Rusak">RMA / Item Rusak</option>
-                <option value="POD Issue">POD Issue</option>
-                <option value="Kendala System WMS">Kendala System WMS</option>
-                <option value="Kendala Alat / RF Scanner">Kendala Alat / RF Scanner</option>
-                <option value="Lain-Lain">Lain-Lain</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Tingkat Prioritas</label>
-              <select id="formPriority" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
-                <option value="Low">Low (Biasa)</option>
-                <option value="Medium">Medium (Sedang)</option>
-                <option value="High">High (Penting)</option>
-                <option value="Urgent">Urgent (Kritikal)</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Part No. / Lokasi Rak / Dokumen</label>
-            <input type="text" id="formItemLocation" placeholder="Contoh: PN 98213 / Rak B-04 / DO-1029" class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Detail Catatan / Pekerjaan Pending</label>
-            <textarea id="formNotes" rows="3" placeholder="Tuliskan catatan detail isu atau tugas yang harus dilanjutkan..." required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none"></textarea>
-          </div>
-
-          <!-- LAMPIRAN FOTO -->
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Lampiran Foto (Opsional)</label>
-            <input type="file" id="formPhoto" accept="image/*" onchange="previewSelectedImage(event)" class="w-full text-xs border border-slate-300 rounded-lg p-1.5 focus:outline-none">
-            <div id="imagePreviewContainer" class="mt-2 hidden relative">
-              <img id="imagePreview" src="#" alt="Preview Foto" class="w-full h-32 object-cover rounded-lg border border-slate-200">
-              <button type="button" onclick="removeSelectedImage()" class="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full text-xs shadow hover:bg-red-700">
-                <i class="fa-solid fa-xmark"></i>
-              </button>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Status</label>
-              <select id="formStatus" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
-                <option value="Pending">Pending</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Done">Done</option>
-              </select>
-            </div>
-            <div class="flex items-end">
-              <button type="submit" id="submitBtn" class="w-full bg-red-700 hover:bg-red-800 text-white font-semibold py-2 px-3 rounded-lg text-xs transition shadow-md flex items-center justify-center gap-2">
-                <i class="fa-solid fa-paper-plane"></i>
-                <span>Simpan Log</span>
-              </button>
-            </div>
-          </div>
-          <button type="button" id="cancelEditBtn" onclick="resetForm()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-1.5 rounded-lg text-xs transition hidden">
-            Batal Edit
-          </button>
-        </form>
-      </div>
-
-      <!-- TABLE LOGS -->
-      <div class="lg:col-span-8 bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-        <div>
-          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-slate-100 pb-4 mb-4 no-print">
-            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <i class="fa-solid fa-list-check text-slate-700"></i>
-              Daftar Catatan Handover
-            </h2>
-
-            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-              <select id="filterDept" onchange="renderLogs()" class="text-xs border border-slate-300 rounded-lg p-2 focus:outline-none bg-slate-50">
-                <option value="ALL">Semua Divisi</option>
-                <option value="Inbound">Inbound</option>
-                <option value="Outbound">Outbound</option>
-                <option value="RMA">RMA</option>
-                <option value="Dispatch">Dispatch</option>
-                <option value="Inventory">Inventory</option>
-                <option value="POD">POD</option>
-              </select>
-
-              <select id="filterShift" onchange="renderLogs()" class="text-xs border border-slate-300 rounded-lg p-2 focus:outline-none bg-slate-50">
-                <option value="ALL">Semua Shift</option>
-                <option value="Shift 1">Shift 1</option>
-                <option value="Shift 2">Shift 2</option>
-                <option value="Shift 3">Shift 3</option>
-              </select>
-
-              <select id="filterStatus" onchange="renderLogs()" class="text-xs border border-slate-300 rounded-lg p-2 focus:outline-none bg-slate-50">
-                <option value="ALL">Semua Status</option>
-                <option value="Pending">Pending</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Done">Done</option>
-              </select>
-
-              <input type="text" id="filterSearch" onkeyup="renderLogs()" placeholder="Cari Part No / Petugas..." class="text-xs border border-slate-300 rounded-lg p-2 focus:outline-none w-full md:w-36">
-            </div>
-          </div>
-
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-              <thead>
-                <tr class="bg-slate-800 text-white text-xs uppercase tracking-wider">
-                  <th class="p-3 rounded-tl-lg">Tgl / Shift</th>
-                  <th class="p-3">Alur Divisi</th>
-                  <th class="p-3">Kategori & Part No</th>
-                  <th class="p-3">Petugas (Serah ➔ Terima)</th>
-                  <th class="p-3 text-center">Prioritas</th>
-                  <th class="p-3 text-center">Foto</th>
-                  <th class="p-3 text-center">Status</th>
-                  <th class="p-3 text-center rounded-tr-lg no-print">Aksi</th>
-                </tr>
-              </thead>
-              <tbody id="logTableBody" class="divide-y divide-slate-200 text-xs text-slate-700">
-                <!-- DYNAMICALLY RENDERED -->
-              </tbody>
-            </table>
-          </div>
-
-          <div id="emptyState" class="text-center py-12 hidden">
-            <i class="fa-solid fa-box-open text-4xl text-slate-300 mb-2"></i>
-            <p class="text-slate-500 font-medium">Belum ada data handover tercatat.</p>
-          </div>
+        <div id="emptyState" class="text-center py-12 hidden">
+          <i class="fa-solid fa-box-open text-4xl text-slate-300 mb-2"></i>
+          <p class="text-slate-500 font-medium">Belum ada data handover tercatat.</p>
         </div>
       </div>
     </div>
   </main>
+
+  <!-- MODAL FORM INPUT / EDIT -->
+  <div id="formModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden no-print">
+    <div class="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-xl w-full max-h-[90vh] overflow-y-auto flex flex-col">
+      <div class="bg-slate-900 text-white p-4 flex justify-between items-center sticky top-0 z-10">
+        <h3 id="modalTitle" class="font-bold text-sm flex items-center gap-2">
+          <i class="fa-solid fa-square-plus text-red-500"></i>
+          Form Input Serah Terima Shift
+        </h3>
+        <button onclick="closeFormModal()" class="text-slate-400 hover:text-white transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="handoverForm" onsubmit="handleFormSubmit(event)" class="p-5 space-y-4">
+        <input type="hidden" id="editLogId">
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Tanggal & Shift</label>
+          <div class="grid grid-cols-2 gap-2">
+            <input type="date" id="formDate" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
+            <select id="formShift" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
+              <option value="Shift 1">Shift 1 (Pagi)</option>
+              <option value="Shift 2">Shift 2 (Siang)</option>
+              <option value="Shift 3">Shift 3 (Malam)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- DIVISI PENGIRIM & TUJUAN -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Divisi Asal (Pengirim)</label>
+            <select id="formFromDept" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none bg-white">
+              <option value="Inbound">Inbound</option>
+              <option value="Outbound">Outbound</option>
+              <option value="RMA">RMA</option>
+              <option value="Dispatch">Dispatch</option>
+              <option value="Inventory">Inventory</option>
+              <option value="POD">POD</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Divisi Tujuan (Tindak Lanjut)</label>
+            <select id="formToDept" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none bg-white">
+              <option value="Inbound">Inbound</option>
+              <option value="Outbound">Outbound</option>
+              <option value="RMA">RMA</option>
+              <option value="Dispatch">Dispatch</option>
+              <option value="Inventory">Inventory</option>
+              <option value="POD">POD</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Petugas Serah</label>
+            <input type="text" id="formSender" placeholder="Nama Petugas" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Petugas Terima</label>
+            <input type="text" id="formReceiver" placeholder="Nama Penerima" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Kategori Isu</label>
+            <select id="formCategory" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
+              <option value="Stock Discrepancy">Stock Discrepancy</option>
+              <option value="Pending Putaway">Pending Putaway</option>
+              <option value="Inbound/Outbound Delay">Inbound/Outbound Delay</option>
+              <option value="RMA / Item Rusak">RMA / Item Rusak</option>
+              <option value="POD Issue">POD Issue</option>
+              <option value="Kendala System WMS">Kendala System WMS</option>
+              <option value="Kendala Alat / RF Scanner">Kendala Alat / RF Scanner</option>
+              <option value="Lain-Lain">Lain-Lain</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Tingkat Prioritas</label>
+            <select id="formPriority" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
+              <option value="Low">Low (Biasa)</option>
+              <option value="Medium">Medium (Sedang)</option>
+              <option value="High">High (Penting)</option>
+              <option value="Urgent">Urgent (Kritikal)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Part No. / Lokasi Rak / Dokumen</label>
+          <input type="text" id="formItemLocation" placeholder="Contoh: PN 98213 / Rak B-04 / DO-1029" class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Detail Catatan / Pekerjaan Pending</label>
+          <textarea id="formNotes" rows="3" placeholder="Tuliskan catatan detail isu atau tugas yang harus dilanjutkan..." required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none"></textarea>
+        </div>
+
+        <!-- LAMPIRAN FOTO -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Lampiran Foto (Opsional)</label>
+          <input type="file" id="formPhoto" accept="image/*" onchange="previewSelectedImage(event)" class="w-full text-xs border border-slate-300 rounded-lg p-1.5 focus:outline-none">
+          <div id="imagePreviewContainer" class="mt-2 hidden relative">
+            <img id="imagePreview" src="#" alt="Preview Foto" class="w-full h-32 object-cover rounded-lg border border-slate-200">
+            <button type="button" onclick="removeSelectedImage()" class="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full text-xs shadow hover:bg-red-700">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Status</label>
+          <select id="formStatus" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Done">Done</option>
+          </select>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t">
+          <button type="button" onclick="closeFormModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg text-xs transition">Batal</button>
+          <button type="submit" id="submitBtn" class="bg-red-700 hover:bg-red-800 text-white font-semibold py-2 px-5 rounded-lg text-xs transition shadow-md flex items-center gap-2">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>Simpan Log</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- MODAL DETAIL -->
   <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden no-print">
@@ -311,9 +303,7 @@
           <i class="fa-solid fa-file-invoice text-red-500"></i>
           Detail Catatan Handover Shift
         </h3>
-        <button onclick="closeDetailModal()" class="text-slate-400 hover:text-white transition">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
+        <button onclick="closeDetailModal()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
       <div id="detailModalContent" class="p-5 space-y-4 text-xs"></div>
       <div class="bg-slate-50 p-3 border-t border-slate-200 flex justify-end">
@@ -326,7 +316,7 @@
   <div id="configModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden no-print">
     <div class="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-md w-full p-5 space-y-4">
       <h3 class="font-bold text-base text-slate-800 border-b pb-2">Pengaturan Database Cloud (JSONBin.io)</h3>
-      <p class="text-xs text-slate-600">Aplikasi sudah menggunakan Cloud Key gratis secara default.</p>
+      <p class="text-xs text-slate-600">Aplikasi menggunakan Cloud Key gratis secara default.</p>
       <div class="space-y-3 text-xs">
         <div>
           <label class="block font-semibold mb-1 text-slate-700">JSONBin Bin ID</label>
@@ -428,6 +418,17 @@
       document.getElementById('imagePreviewContainer').classList.add('hidden');
     }
 
+    function openFormModal() {
+      resetForm();
+      document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-square-plus text-red-500"></i> Form Input Serah Terima Shift`;
+      document.getElementById('submitBtn').innerHTML = `<i class="fa-solid fa-paper-plane"></i> Simpan Log`;
+      document.getElementById('formModal').classList.remove('hidden');
+    }
+
+    function closeFormModal() {
+      document.getElementById('formModal').classList.add('hidden');
+    }
+
     function handleFormSubmit(event) {
       event.preventDefault();
       const editId = document.getElementById('editLogId').value;
@@ -458,6 +459,7 @@
       saveToLocalStorage();
       syncToCloud();
       renderLogs();
+      closeFormModal();
       resetForm();
     }
 
@@ -521,14 +523,14 @@
               ${log.photo ? `<i class="fa-solid fa-image text-slate-600 text-sm"></i>` : `<span class="text-slate-300">-</span>`}
             </td>
             <td class="p-3 text-center" onclick="event.stopPropagation()">
-              <button onclick="toggleStatus(${log.id})" class="hover:opacity-80 transition">
+              <button onclick="toggleStatus(${log.id})" title="Klik untuk ubah status" class="hover:opacity-80 transition">
                 ${statusBadge}
               </button>
             </td>
             <td class="p-3 text-center no-print" onclick="event.stopPropagation()">
               <div class="flex items-center justify-center gap-1">
-                <button onclick="editLog(${log.id})" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded"><i class="fa-solid fa-pen-to-square"></i></button>
-                <button onclick="deleteLog(${log.id})" class="p-1.5 text-red-600 hover:bg-red-50 rounded"><i class="fa-solid fa-trash"></i></button>
+                <button onclick="editLog(${log.id})" title="Edit" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button onclick="deleteLog(${log.id})" title="Hapus" class="p-1.5 text-red-600 hover:bg-red-50 rounded"><i class="fa-solid fa-trash"></i></button>
               </div>
             </td>
           `;
@@ -609,8 +611,9 @@
         removeSelectedImage();
       }
 
+      document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-blue-500"></i> Edit Catatan Handover`;
       document.getElementById('submitBtn').innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Update Log`;
-      document.getElementById('cancelEditBtn').classList.remove('hidden');
+      document.getElementById('formModal').classList.remove('hidden');
     }
 
     function resetForm() {
@@ -618,8 +621,6 @@
       document.getElementById('editLogId').value = '';
       document.getElementById('formDate').value = new Date().toISOString().split('T')[0];
       removeSelectedImage();
-      document.getElementById('submitBtn').innerHTML = `<i class="fa-solid fa-paper-plane"></i> Simpan Log`;
-      document.getElementById('cancelEditBtn').classList.add('hidden');
     }
 
     function openDetailModal(id) {
