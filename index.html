@@ -30,7 +30,7 @@
       <div class="flex items-center gap-3">
         <!-- LOGO SINOTRANS -->
         <div class="bg-white p-1.5 rounded-lg shadow-md flex items-center justify-center">
-          <img src="https://i.ibb.co/6P2T3Q7/sinotrans-logo.png" alt="Sinotrans Logo" class="h-10 object-contain" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/ thumb/a/a4/Sinotrans_logo.svg/320px-Sinotrans_logo.svg.png'">
+          <img src="https://i.ibb.co/6P2T3Q7/sinotrans-logo.png" alt="Sinotrans Logo" class="h-10 object-contain" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Sinotrans_logo.svg/320px-Sinotrans_logo.svg.png'">
         </div>
         <div>
           <h1 class="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
@@ -72,35 +72,46 @@
   <!-- MAIN CONTAINER -->
   <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
 
-    <!-- STATS DASHBOARD (4 KARTU INTEGRATED) -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 no-print">
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between border-l-4 border-l-slate-700">
+    <!-- STATS DASHBOARD (5 KARTU LENGKAP) -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 no-print">
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between border-l-4 border-l-slate-700">
         <div>
-          <p class="text-xs font-medium text-slate-500 uppercase">Total Handover</p>
-          <h3 id="statTotal" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+          <p class="text-[10px] font-semibold text-slate-500 uppercase">Total Handover</p>
+          <h3 id="statTotal" class="text-xl font-bold text-slate-800 mt-0.5">0</h3>
         </div>
-        <div class="bg-slate-100 text-slate-700 p-3 rounded-full"><i class="fa-solid fa-clipboard-list text-xl"></i></div>
+        <div class="bg-slate-100 text-slate-700 p-2.5 rounded-full"><i class="fa-solid fa-clipboard-list text-lg"></i></div>
       </div>
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between border-l-4 border-l-amber-500">
+      
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between border-l-4 border-l-amber-500">
         <div>
-          <p class="text-xs font-medium text-slate-500 uppercase">Status Pending</p>
-          <h3 id="statPending" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
+          <p class="text-[10px] font-semibold text-slate-500 uppercase">Status Pending</p>
+          <h3 id="statPending" class="text-xl font-bold text-amber-600 mt-0.5">0</h3>
         </div>
-        <div class="bg-amber-50 text-amber-600 p-3 rounded-full"><i class="fa-solid fa-clock text-xl"></i></div>
+        <div class="bg-amber-50 text-amber-600 p-2.5 rounded-full"><i class="fa-solid fa-clock text-lg"></i></div>
       </div>
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between border-l-4 border-l-blue-600">
+
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between border-l-4 border-l-blue-600">
         <div>
-          <p class="text-xs font-medium text-slate-500 uppercase">In Progress</p>
-          <h3 id="statInProgress" class="text-2xl font-bold text-blue-600 mt-1">0</h3>
+          <p class="text-[10px] font-semibold text-slate-500 uppercase">In Progress</p>
+          <h3 id="statInProgress" class="text-xl font-bold text-blue-600 mt-0.5">0</h3>
         </div>
-        <div class="bg-blue-50 text-blue-600 p-3 rounded-full"><i class="fa-solid fa-spinner fa-spin text-xl"></i></div>
+        <div class="bg-blue-50 text-blue-600 p-2.5 rounded-full"><i class="fa-solid fa-spinner fa-spin text-lg"></i></div>
       </div>
-      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between border-l-4 border-l-emerald-600">
+
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between border-l-4 border-l-red-600">
         <div>
-          <p class="text-xs font-medium text-slate-500 uppercase">Selesai (Done)</p>
-          <h3 id="statCompleted" class="text-2xl font-bold text-emerald-600 mt-1">0</h3>
+          <p class="text-[10px] font-semibold text-slate-500 uppercase">Prioritas High/Urgent</p>
+          <h3 id="statUrgent" class="text-xl font-bold text-red-600 mt-0.5">0</h3>
         </div>
-        <div class="bg-emerald-50 text-emerald-600 p-3 rounded-full"><i class="fa-solid fa-circle-check text-xl"></i></div>
+        <div class="bg-red-50 text-red-600 p-2.5 rounded-full"><i class="fa-solid fa-triangle-exclamation text-lg"></i></div>
+      </div>
+
+      <div class="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between border-l-4 border-l-emerald-600 col-span-2 md:col-span-1">
+        <div>
+          <p class="text-[10px] font-semibold text-slate-500 uppercase">Selesai (Done)</p>
+          <h3 id="statCompleted" class="text-xl font-bold text-emerald-600 mt-0.5">0</h3>
+        </div>
+        <div class="bg-emerald-50 text-emerald-600 p-2.5 rounded-full"><i class="fa-solid fa-circle-check text-lg"></i></div>
       </div>
     </div>
 
@@ -643,6 +654,7 @@
       document.getElementById('statTotal').innerText = handoverLogs.length;
       document.getElementById('statPending').innerText = handoverLogs.filter(l => l.status === 'Pending').length;
       document.getElementById('statInProgress').innerText = handoverLogs.filter(l => l.status === 'In Progress').length;
+      document.getElementById('statUrgent').innerText = handoverLogs.filter(l => l.priority === 'High' || l.priority === 'Urgent').length;
       document.getElementById('statCompleted').innerText = handoverLogs.filter(l => l.status === 'Done').length;
     }
 
