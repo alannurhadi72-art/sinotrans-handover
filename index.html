@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sinotrans Sparepart - Shift Handover Log</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- html2pdf.js for direct PDF download -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      .print-only { display: block !important; }
+      body { background: white !important; color: black !important; padding: 0 !important; }
+      .shadow-md, .shadow-sm, .shadow-lg { box-shadow: none !important; }
+      .border { border-color: #cbd5e1 !important; }
+    }
+    .print-only { display: none; }
+  </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col">
+
+  <!-- HEADER / NAVBAR -->
+  <header class="bg-gradient-to-r from-slate-900 via-red-950 to-slate-900 text-white shadow-lg no-print">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="flex items-center gap-3">
+        <!-- LOGO SINOTRANS -->
+        <div class="bg-white p-1.5 rounded-lg shadow-md flex items-center justify-center">
+          <img src="https://i.ibb.co/6P2T3Q7/sinotrans-logo.png" alt="Sinotrans Logo" class="h-10 object-contain" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/ thumb/a/a4/Sinotrans_logo.svg/320px-Sinotrans_logo.svg.png'">
+        </div>
+        <div>
+          <h1 class="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+            SINOTRANS SPAREPART
+            <span class="text-xs font-semibold uppercase bg-red-700 text-white px-2 py-0.5 rounded tracking-wide">Shift Log</span>
+          </h1>
+          <p class="text-xs text-slate-300">Aplikasi Serah Terima Operational & Stock Control Handover</p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <button onclick="openFormModal()" class="bg-red-700 hover:bg-red-800 text-white px-3.5 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-2 shadow-md">
+          <i class="fa-solid fa-plus"></i>
+          <span>Buat Handover Baru</span>
+        </button>
+        <button onclick="sendWASummary()" title="Kirim Ringkasan Handover ke WhatsApp Group" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
+          <i class="fa-brands fa-whatsapp text-sm"></i>
+          <span class="hidden sm:inline">WA Summary</span>
+        </button>
+        <button onclick="fetchCloudData()" title="Sinkronisasi Cloud Data" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-2 rounded-lg text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-rotate text-red-400" id="syncIcon"></i>
+          <span class="hidden sm:inline">Sync Cloud</span>
+        </button>
+        <button onclick="openConfigModal()" title="Pengaturan API Cloud" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2.5 py-2 rounded-lg text-xs font-medium transition shadow-sm">
+          <i class="fa-solid fa-gear text-slate-400"></i>
+        </button>
+        <button onclick="exportToCSV()" class="bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-2 rounded-lg text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-file-excel"></i>
+          <span class="hidden sm:inline">CSV</span>
+        </button>
+        <button onclick="exportToPDF()" class="bg-red-700 hover:bg-red-800 text-white px-3 py-2 rounded-lg text-xs font-medium transition flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-file-pdf"></i>
+          <span>Cetak PDF</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
+
+    <!-- STATS DASHBOARD (4 KARTU INTEGRATED) -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 no-print">
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between border-l-4 border-l-slate-700">
+        <div>
+          <p class="text-xs font-medium text-slate-500 uppercase">Total Handover</p>
+          <h3 id="statTotal" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+        </div>
+        <div class="bg-slate-100 text-slate-700 p-3 rounded-full"><i class="fa-solid fa-clipboard-list text-xl"></i></div>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between border-l-4 border-l-amber-500">
+        <div>
+          <p class="text-xs font-medium text-slate-500 uppercase">Status Pending</p>
+          <h3 id="statPending" class="text-2xl font-bold text-amber-600 mt-1">0</h3>
+        </div>
+        <div class="bg-amber-50 text-amber-600 p-3 rounded-full"><i class="fa-solid fa-clock text-xl"></i></div>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between border-l-4 border-l-blue-600">
+        <div>
+          <p class="text-xs font-medium text-slate-500 uppercase">In Progress</p>
+          <h3 id="statInProgress" class="text-2xl font-bold text-blue-600 mt-1">0</h3>
+        </div>
+        <div class="bg-blue-50 text-blue-600 p-3 rounded-full"><i class="fa-solid fa-spinner fa-spin text-xl"></i></div>
+      </div>
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between border-l-4 border-l-emerald-600">
+        <div>
+          <p class="text-xs font-medium text-slate-500 uppercase">Selesai (Done)</p>
+          <h3 id="statCompleted" class="text-2xl font-bold text-emerald-600 mt-1">0</h3>
+        </div>
+        <div class="bg-emerald-50 text-emerald-600 p-3 rounded-full"><i class="fa-solid fa-circle-check text-xl"></i></div>
+      </div>
+    </div>
+
+    <!-- TABLE LOGS (FULL WIDTH) -->
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between" id="printableArea">
+
+      <!-- PDF PRINT-ONLY HEADER -->
+      <div class="print-only mb-6 border-b-2 border-red-800 pb-4">
+        <div class="flex justify-between items-center">
+          <div class="flex items-center gap-3">
+            <img src="https://i.ibb.co/6P2T3Q7/sinotrans-logo.png" alt="Sinotrans Logo" class="h-12 object-contain">
+            <div>
+              <h2 class="text-xl font-bold text-slate-900 uppercase tracking-wide">PT SINOTRANS SPAREPART WAREHOUSE</h2>
+              <p class="text-xs text-slate-600">Laporan Serah Terima Pekerjaan (Shift Handover Log Sheet)</p>
+            </div>
+          </div>
+          <div class="text-right text-xs text-slate-500">
+            <p>Dicetak Pada: <span id="pdfPrintDate"></span></p>
+            <p>Dokumen Operasional Gudang</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <!-- FILTER BAR -->
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 border-b border-slate-100 pb-4 mb-4 no-print">
+          <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-red-700"></i>
+            Daftar Catatan Handover Shift
+          </h2>
+
+          <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+            <!-- DATE RANGE PICKER -->
+            <div class="flex items-center gap-1 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1">
+              <span class="text-[10px] font-semibold text-slate-500 uppercase">Tgl:</span>
+              <input type="date" id="filterStartDate" onchange="renderLogs()" class="text-xs bg-transparent focus:outline-none">
+              <span class="text-slate-400 text-xs">s/d</span>
+              <input type="date" id="filterEndDate" onchange="renderLogs()" class="text-xs bg-transparent focus:outline-none">
+            </div>
+
+            <select id="filterDept" onchange="renderLogs()" class="text-xs border border-slate-300 rounded-lg p-2 focus:outline-none bg-slate-50">
+              <option value="ALL">Semua Divisi</option>
+              <option value="Inbound">Inbound</option>
+              <option value="Outbound">Outbound</option>
+              <option value="RMA">RMA</option>
+              <option value="Dispatch">Dispatch</option>
+              <option value="Inventory">Inventory</option>
+              <option value="POD">POD</option>
+            </select>
+
+            <select id="filterShift" onchange="renderLogs()" class="text-xs border border-slate-300 rounded-lg p-2 focus:outline-none bg-slate-50">
+              <option value="ALL">Semua Shift</option>
+              <option value="Shift 1">Shift 1</option>
+              <option value="Shift 2">Shift 2</option>
+              <option value="Shift 3">Shift 3</option>
+            </select>
+
+            <select id="filterStatus" onchange="renderLogs()" class="text-xs border border-slate-300 rounded-lg p-2 focus:outline-none bg-slate-50">
+              <option value="ALL">Semua Status</option>
+              <option value="Pending">Pending</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Done">Done</option>
+            </select>
+
+            <input type="text" id="filterSearch" onkeyup="renderLogs()" placeholder="Cari Part No / Petugas..." class="text-xs border border-slate-300 rounded-lg p-2 focus:outline-none w-full lg:w-40">
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-800 text-white text-xs uppercase tracking-wider">
+                <th class="p-3 rounded-tl-lg">Tgl / Shift</th>
+                <th class="p-3">Alur Divisi</th>
+                <th class="p-3">Kategori & Part No / Lokasi</th>
+                <th class="p-3">Petugas (Serah ➔ Terima)</th>
+                <th class="p-3 text-center">Prioritas</th>
+                <th class="p-3 text-center">Foto</th>
+                <th class="p-3 text-center">Status (Klik Ubah)</th>
+                <th class="p-3 text-center rounded-tr-lg no-print">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="logTableBody" class="divide-y divide-slate-200 text-xs text-slate-700">
+              <!-- DYNAMICALLY RENDERED -->
+            </tbody>
+          </table>
+        </div>
+
+        <div id="emptyState" class="text-center py-12 hidden">
+          <i class="fa-solid fa-box-open text-4xl text-slate-300 mb-2"></i>
+          <p class="text-slate-500 font-medium">Belum ada data handover tercatat.</p>
+        </div>
+      </div>
+
+      <!-- PDF PRINT-ONLY SIGNATURE BLOCK -->
+      <div class="print-only mt-12 pt-6 border-t border-slate-300">
+        <p class="text-xs font-bold text-slate-700 uppercase mb-4 text-center">Lembar Pengesahan Serah Terima Pekerjaan Gudang</p>
+        <div class="grid grid-cols-3 gap-6 text-center text-xs">
+          <div class="flex flex-col justify-between h-28 border border-slate-200 p-2 rounded">
+            <span class="font-semibold text-slate-600 uppercase">Petugas Pemberi (Sender)</span>
+            <span class="text-slate-400 text-[10px]">( Tanda Tangan & Nama )</span>
+            <span class="border-t border-slate-400 pt-1 font-bold text-slate-800">.............................................</span>
+          </div>
+          <div class="flex flex-col justify-between h-28 border border-slate-200 p-2 rounded">
+            <span class="font-semibold text-slate-600 uppercase">Petugas Penerima (Receiver)</span>
+            <span class="text-slate-400 text-[10px]">( Tanda Tangan & Nama )</span>
+            <span class="border-t border-slate-400 pt-1 font-bold text-slate-800">.............................................</span>
+          </div>
+          <div class="flex flex-col justify-between h-28 border border-slate-200 p-2 rounded">
+            <span class="font-semibold text-slate-600 uppercase">Supervisor / SPV Gudang</span>
+            <span class="text-slate-400 text-[10px]">( Tanda Tangan & Stempel )</span>
+            <span class="border-t border-slate-400 pt-1 font-bold text-slate-800">.............................................</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- MODAL FORM INPUT / EDIT -->
+  <div id="formModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden no-print">
+    <div class="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-xl w-full max-h-[90vh] overflow-y-auto flex flex-col">
+      <div class="bg-slate-900 text-white p-4 flex justify-between items-center sticky top-0 z-10">
+        <h3 id="modalTitle" class="font-bold text-sm flex items-center gap-2">
+          <i class="fa-solid fa-square-plus text-red-500"></i>
+          Form Input Serah Terima Shift
+        </h3>
+        <button onclick="closeFormModal()" class="text-slate-400 hover:text-white transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="handoverForm" onsubmit="handleFormSubmit(event)" class="p-5 space-y-4">
+        <input type="hidden" id="editLogId">
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Tanggal & Shift</label>
+          <div class="grid grid-cols-2 gap-2">
+            <input type="date" id="formDate" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
+            <select id="formShift" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
+              <option value="Shift 1">Shift 1 (Pagi)</option>
+              <option value="Shift 2">Shift 2 (Siang)</option>
+              <option value="Shift 3">Shift 3 (Malam)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- DIVISI PENGIRIM & TUJUAN -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Divisi Asal (Pengirim)</label>
+            <select id="formFromDept" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none bg-white">
+              <option value="Inbound">Inbound</option>
+              <option value="Outbound">Outbound</option>
+              <option value="RMA">RMA</option>
+              <option value="Dispatch">Dispatch</option>
+              <option value="Inventory">Inventory</option>
+              <option value="POD">POD</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Divisi Tujuan (Tindak Lanjut)</label>
+            <select id="formToDept" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none bg-white">
+              <option value="Inbound">Inbound</option>
+              <option value="Outbound">Outbound</option>
+              <option value="RMA">RMA</option>
+              <option value="Dispatch">Dispatch</option>
+              <option value="Inventory">Inventory</option>
+              <option value="POD">POD</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Petugas Serah</label>
+            <input type="text" id="formSender" placeholder="Nama Petugas" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Petugas Terima</label>
+            <input type="text" id="formReceiver" placeholder="Nama Penerima" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Kategori Isu</label>
+            <select id="formCategory" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
+              <option value="Stock Discrepancy">Stock Discrepancy</option>
+              <option value="Pending Putaway">Pending Putaway</option>
+              <option value="Inbound/Outbound Delay">Inbound/Outbound Delay</option>
+              <option value="RMA / Item Rusak">RMA / Item Rusak</option>
+              <option value="POD Issue">POD Issue</option>
+              <option value="Kendala System WMS">Kendala System WMS</option>
+              <option value="Kendala Alat / RF Scanner">Kendala Alat / RF Scanner</option>
+              <option value="Lain-Lain">Lain-Lain</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Tingkat Prioritas</label>
+            <select id="formPriority" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
+              <option value="Low">Low (Biasa)</option>
+              <option value="Medium">Medium (Sedang)</option>
+              <option value="High">High (Penting)</option>
+              <option value="Urgent">Urgent (Kritikal)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Part No. / Lokasi Rak / Dokumen</label>
+          <input type="text" id="formItemLocation" placeholder="Contoh: PN 98213 / Rak B-04 / DO-1029" class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Detail Catatan / Pekerjaan Pending</label>
+          <textarea id="formNotes" rows="3" placeholder="Tuliskan catatan detail isu atau tugas yang harus dilanjutkan..." required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none"></textarea>
+        </div>
+
+        <!-- LAMPIRAN FOTO -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Lampiran Foto (Opsional)</label>
+          <input type="file" id="formPhoto" accept="image/*" onchange="previewSelectedImage(event)" class="w-full text-xs border border-slate-300 rounded-lg p-1.5 focus:outline-none">
+          <div id="imagePreviewContainer" class="mt-2 hidden relative">
+            <img id="imagePreview" src="#" alt="Preview Foto" class="w-full h-32 object-cover rounded-lg border border-slate-200">
+            <button type="button" onclick="removeSelectedImage()" class="absolute top-1 right-1 bg-red-600 text-white p-1 rounded-full text-xs shadow hover:bg-red-700">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Status</label>
+          <select id="formStatus" required class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-red-700 focus:outline-none">
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Done">Done</option>
+          </select>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t">
+          <button type="button" onclick="closeFormModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg text-xs transition">Batal</button>
+          <button type="submit" id="submitBtn" class="bg-red-700 hover:bg-red-800 text-white font-semibold py-2 px-5 rounded-lg text-xs transition shadow-md flex items-center gap-2">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>Simpan Log</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL DETAIL & AUDIT TRAIL -->
+  <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden no-print">
+    <div class="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-lg w-full overflow-hidden flex flex-col">
+      <div class="bg-slate-900 text-white p-4 flex justify-between items-center">
+        <h3 class="font-bold text-sm flex items-center gap-2">
+          <i class="fa-solid fa-file-invoice text-red-500"></i>
+          Detail Catatan & Audit Trail
+        </h3>
+        <button onclick="closeDetailModal()" class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+      <div id="detailModalContent" class="p-5 space-y-4 text-xs"></div>
+      <div class="bg-slate-50 p-3 border-t border-slate-200 flex justify-end">
+        <button onclick="closeDetailModal()" class="bg-slate-700 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-xs font-semibold">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CONFIG API -->
+  <div id="configModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden no-print">
+    <div class="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-md w-full p-5 space-y-4">
+      <h3 class="font-bold text-base text-slate-800 border-b pb-2">Pengaturan Database Cloud (JSONBin.io)</h3>
+      <p class="text-xs text-slate-600">Aplikasi menggunakan Cloud Key gratis secara default.</p>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold mb-1 text-slate-700">JSONBin Bin ID</label>
+          <input type="text" id="cfgBinId" class="w-full border p-2 rounded focus:ring-2 focus:ring-red-700">
+        </div>
+        <div>
+          <label class="block font-semibold mb-1 text-slate-700">JSONBin Master Key</label>
+          <input type="password" id="cfgMasterKey" class="w-full border p-2 rounded focus:ring-2 focus:ring-red-700">
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeConfigModal()" class="bg-slate-200 text-slate-700 px-3 py-1.5 rounded text-xs">Batal</button>
+        <button onclick="saveApiConfig()" class="bg-red-700 text-white px-3 py-1.5 rounded text-xs font-semibold">Simpan & Sync</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT -->
+  <script>
+    let BIN_ID = localStorage.getItem('sinotrans_bin_id') || '67c13280ad19ca34f80a4f50';
+    let MASTER_KEY = localStorage.getItem('sinotrans_master_key') || '$2a$10$3pC3yJ5tHhCqYlA6m3m8ee8/A/0k8Zg.hXmYJqKj0KkQ/vW7aK2';
+
+    let handoverLogs = [];
+    let currentPhotoBase64 = "";
+
+    window.onload = function() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('formDate').value = today;
+      document.getElementById('pdfPrintDate').innerText = new Date().toLocaleString('id-ID');
+      fetchCloudData();
+    };
+
+    function fetchCloudData() {
+      const syncIcon = document.getElementById('syncIcon');
+      if (syncIcon) syncIcon.classList.add('fa-spin');
+
+      fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+        headers: { 'X-Master-Key': MASTER_KEY }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.record && Array.isArray(data.record)) {
+          handoverLogs = data.record;
+          saveToLocalStorage();
+        } else {
+          loadFromLocalStorage();
+        }
+        renderLogs();
+      })
+      .catch(err => {
+        loadFromLocalStorage();
+        renderLogs();
+      })
+      .finally(() => {
+        if (syncIcon) syncIcon.classList.remove('fa-spin');
+      });
+    }
+
+    function syncToCloud() {
+      const syncIcon = document.getElementById('syncIcon');
+      if (syncIcon) syncIcon.classList.add('fa-spin');
+
+      fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': MASTER_KEY
+        },
+        body: JSON.stringify(handoverLogs)
+      })
+      .catch(err => console.error("Cloud sync error:", err))
+      .finally(() => {
+        if (syncIcon) syncIcon.classList.remove('fa-spin');
+      });
+    }
+
+    function loadFromLocalStorage() {
+      const saved = localStorage.getItem('sinotrans_handover_logs');
+      handoverLogs = saved ? JSON.parse(saved) : getSampleLogs();
+    }
+
+    function saveToLocalStorage() {
+      localStorage.setItem('sinotrans_handover_logs', JSON.stringify(handoverLogs));
+    }
+
+    function previewSelectedImage(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        currentPhotoBase64 = e.target.result;
+        document.getElementById('imagePreview').src = currentPhotoBase64;
+        document.getElementById('imagePreviewContainer').classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeSelectedImage() {
+      currentPhotoBase64 = "";
+      document.getElementById('formPhoto').value = "";
+      document.getElementById('imagePreviewContainer').classList.add('hidden');
+    }
+
+    function openFormModal() {
+      resetForm();
+      document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-square-plus text-red-500"></i> Form Input Serah Terima Shift`;
+      document.getElementById('submitBtn').innerHTML = `<i class="fa-solid fa-paper-plane"></i> Simpan Log`;
+      document.getElementById('formModal').classList.remove('hidden');
+    }
+
+    function closeFormModal() {
+      document.getElementById('formModal').classList.add('hidden');
+    }
+
+    function handleFormSubmit(event) {
+      event.preventDefault();
+      const editId = document.getElementById('editLogId').value;
+      const nowFormatted = new Date().toLocaleString('id-ID');
+
+      if (editId) {
+        const index = handoverLogs.findIndex(l => l.id === Number(editId));
+        if (index !== -1) {
+          handoverLogs[index] = {
+            ...handoverLogs[index],
+            date: document.getElementById('formDate').value,
+            shift: document.getElementById('formShift').value,
+            fromDept: document.getElementById('formFromDept').value,
+            toDept: document.getElementById('formToDept').value,
+            sender: document.getElementById('formSender').value.trim(),
+            receiver: document.getElementById('formReceiver').value.trim(),
+            category: document.getElementById('formCategory').value,
+            priority: document.getElementById('formPriority').value,
+            itemLocation: document.getElementById('formItemLocation').value.trim() || '-',
+            notes: document.getElementById('formNotes').value.trim(),
+            status: document.getElementById('formStatus').value,
+            photo: currentPhotoBase64 || handoverLogs[index].photo,
+            updatedAt: nowFormatted
+          };
+        }
+      } else {
+        const logData = {
+          id: Date.now(),
+          date: document.getElementById('formDate').value,
+          shift: document.getElementById('formShift').value,
+          fromDept: document.getElementById('formFromDept').value,
+          toDept: document.getElementById('formToDept').value,
+          sender: document.getElementById('formSender').value.trim(),
+          receiver: document.getElementById('formReceiver').value.trim(),
+          category: document.getElementById('formCategory').value,
+          priority: document.getElementById('formPriority').value,
+          itemLocation: document.getElementById('formItemLocation').value.trim() || '-',
+          notes: document.getElementById('formNotes').value.trim(),
+          status: document.getElementById('formStatus').value,
+          photo: currentPhotoBase64,
+          createdAt: nowFormatted,
+          updatedAt: nowFormatted
+        };
+        handoverLogs.unshift(logData);
+      }
+
+      saveToLocalStorage();
+      syncToCloud();
+      renderLogs();
+      closeFormModal();
+      resetForm();
+    }
+
+    function renderLogs() {
+      const tbody = document.getElementById('logTableBody');
+      const emptyState = document.getElementById('emptyState');
+      if (!tbody) return;
+
+      const startDate = document.getElementById('filterStartDate').value;
+      const endDate = document.getElementById('filterEndDate').value;
+      const filterDept = document.getElementById('filterDept').value;
+      const filterShift = document.getElementById('filterShift').value;
+      const filterStatus = document.getElementById('filterStatus').value;
+      const searchQuery = document.getElementById('filterSearch').value.toLowerCase();
+
+      const filtered = handoverLogs.filter(log => {
+        const matchDate = (!startDate || log.date >= startDate) && (!endDate || log.date <= endDate);
+        const matchDept = filterDept === 'ALL' || log.fromDept === filterDept || log.toDept === filterDept;
+        const matchShift = filterShift === 'ALL' || log.shift === filterShift;
+        const matchStatus = filterStatus === 'ALL' || log.status === filterStatus;
+        const matchSearch = log.itemLocation.toLowerCase().includes(searchQuery) ||
+                            log.sender.toLowerCase().includes(searchQuery) ||
+                            log.receiver.toLowerCase().includes(searchQuery) ||
+                            log.notes.toLowerCase().includes(searchQuery);
+        return matchDate && matchDept && matchShift && matchStatus && matchSearch;
+      });
+
+      tbody.innerHTML = '';
+      if (filtered.length === 0) {
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+        filtered.forEach(log => {
+          const tr = document.createElement('tr');
+          tr.className = "hover:bg-slate-50 transition cursor-pointer border-b border-slate-100";
+          tr.onclick = () => openDetailModal(log.id);
+
+          const priorityBadge = getPriorityBadge(log.priority);
+          const statusBadge = getStatusBadge(log.status);
+
+          tr.innerHTML = `
+            <td class="p-3">
+              <span class="font-semibold text-slate-800">${log.date}</span>
+              <div class="text-[10px] text-slate-500 font-medium">${log.shift}</div>
+            </td>
+            <td class="p-3">
+              <span class="inline-flex items-center gap-1 font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-[11px]">
+                <span>${log.fromDept || 'Inventory'}</span>
+                <i class="fa-solid fa-arrow-right text-[9px] text-slate-400"></i>
+                <span class="text-red-700">${log.toDept || 'Inventory'}</span>
+              </span>
+            </td>
+            <td class="p-3">
+              <span class="font-semibold text-slate-900">${log.category}</span>
+              <div class="text-[11px] text-slate-500 truncate max-w-[160px]">${log.itemLocation}</div>
+            </td>
+            <td class="p-3">
+              <span class="font-medium text-slate-800">${log.sender}</span>
+              <span class="text-slate-400"> ➔ </span>
+              <span class="font-medium text-slate-800">${log.receiver}</span>
+            </td>
+            <td class="p-3 text-center">${priorityBadge}</td>
+            <td class="p-3 text-center">
+              ${log.photo ? `<i class="fa-solid fa-image text-slate-600 text-sm"></i>` : `<span class="text-slate-300">-</span>`}
+            </td>
+            <td class="p-3 text-center" onclick="event.stopPropagation()">
+              <button onclick="toggleStatus(${log.id})" title="Klik untuk ubah status" class="hover:opacity-80 transition">
+                ${statusBadge}
+              </button>
+            </td>
+            <td class="p-3 text-center no-print" onclick="event.stopPropagation()">
+              <div class="flex items-center justify-center gap-1">
+                <button onclick="editLog(${log.id})" title="Edit" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button onclick="deleteLog(${log.id})" title="Hapus" class="p-1.5 text-red-600 hover:bg-red-50 rounded"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      updateDashboardStats();
+    }
+
+    function getPriorityBadge(priority) {
+      switch(priority) {
+        case 'Urgent': return `<span class="bg-red-100 text-red-800 font-bold px-2 py-0.5 rounded border border-red-200 text-[10px]">URGENT</span>`;
+        case 'High': return `<span class="bg-orange-100 text-orange-800 font-bold px-2 py-0.5 rounded border border-orange-200 text-[10px]">HIGH</span>`;
+        case 'Medium': return `<span class="bg-amber-100 text-amber-800 font-medium px-2 py-0.5 rounded border border-amber-200 text-[10px]">MEDIUM</span>`;
+        default: return `<span class="bg-slate-100 text-slate-700 font-medium px-2 py-0.5 rounded border border-slate-200 text-[10px]">LOW</span>`;
+      }
+    }
+
+    function getStatusBadge(status) {
+      switch(status) {
+        case 'Done': return `<span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded border border-emerald-200 text-[10px]"><i class="fa-solid fa-circle-check mr-1"></i>Done</span>`;
+        case 'In Progress': return `<span class="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded border border-blue-200 text-[10px]"><i class="fa-solid fa-spinner fa-spin mr-1"></i>In Progress</span>`;
+        default: return `<span class="bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded border border-amber-200 text-[10px]"><i class="fa-solid fa-clock mr-1"></i>Pending</span>`;
+      }
+    }
+
+    function updateDashboardStats() {
+      document.getElementById('statTotal').innerText = handoverLogs.length;
+      document.getElementById('statPending').innerText = handoverLogs.filter(l => l.status === 'Pending').length;
+      document.getElementById('statInProgress').innerText = handoverLogs.filter(l => l.status === 'In Progress').length;
+      document.getElementById('statCompleted').innerText = handoverLogs.filter(l => l.status === 'Done').length;
+    }
+
+    function toggleStatus(id) {
+      const log = handoverLogs.find(l => l.id === id);
+      if (!log) return;
+      if (log.status === 'Pending') log.status = 'In Progress';
+      else if (log.status === 'In Progress') log.status = 'Done';
+      else log.status = 'Pending';
+
+      log.updatedAt = new Date().toLocaleString('id-ID');
+      saveToLocalStorage();
+      syncToCloud();
+      renderLogs();
+    }
+
+    function deleteLog(id) {
+      if (confirm('Hapus catatan handover ini?')) {
+        handoverLogs = handoverLogs.filter(l => l.id !== id);
+        saveToLocalStorage();
+        syncToCloud();
+        renderLogs();
+      }
+    }
+
+    function editLog(id) {
+      const log = handoverLogs.find(l => l.id === id);
+      if (!log) return;
+
+      document.getElementById('editLogId').value = log.id;
+      document.getElementById('formDate').value = log.date;
+      document.getElementById('formShift').value = log.shift;
+      document.getElementById('formFromDept').value = log.fromDept || 'Inventory';
+      document.getElementById('formToDept').value = log.toDept || 'Inventory';
+      document.getElementById('formSender').value = log.sender;
+      document.getElementById('formReceiver').value = log.receiver;
+      document.getElementById('formCategory').value = log.category;
+      document.getElementById('formPriority').value = log.priority;
+      document.getElementById('formItemLocation').value = log.itemLocation;
+      document.getElementById('formNotes').value = log.notes;
+      document.getElementById('formStatus').value = log.status;
+
+      if (log.photo) {
+        currentPhotoBase64 = log.photo;
+        document.getElementById('imagePreview').src = log.photo;
+        document.getElementById('imagePreviewContainer').classList.remove('hidden');
+      } else {
+        removeSelectedImage();
+      }
+
+      document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-blue-500"></i> Edit Catatan Handover`;
+      document.getElementById('submitBtn').innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Update Log`;
+      document.getElementById('formModal').classList.remove('hidden');
+    }
+
+    function resetForm() {
+      document.getElementById('handoverForm').reset();
+      document.getElementById('editLogId').value = '';
+      document.getElementById('formDate').value = new Date().toISOString().split('T')[0];
+      removeSelectedImage();
+    }
+
+    function openDetailModal(id) {
+      const log = handoverLogs.find(l => l.id === id);
+      if (!log) return;
+
+      const content = document.getElementById('detailModalContent');
+      content.innerHTML = `
+        <div class="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-lg border">
+          <div><strong class="text-slate-500">Tanggal:</strong> ${log.date}</div>
+          <div><strong class="text-slate-500">Shift:</strong> ${log.shift}</div>
+          <div><strong class="text-slate-500">Alur Divisi:</strong> <span class="font-bold text-red-700">${log.fromDept || 'Inventory'} ➔ ${log.toDept || 'Inventory'}</span></div>
+          <div><strong class="text-slate-500">Prioritas:</strong> ${getPriorityBadge(log.priority)}</div>
+          <div><strong class="text-slate-500">Petugas Serah:</strong> ${log.sender}</div>
+          <div><strong class="text-slate-500">Petugas Terima:</strong> ${log.receiver}</div>
+        </div>
+
+        <div>
+          <strong class="text-slate-500 block mb-1">Kategori & Part No / Lokasi:</strong>
+          <p class="font-semibold text-slate-800">${log.category} - (${log.itemLocation})</p>
+        </div>
+
+        <div>
+          <strong class="text-slate-500 block mb-1">Catatan Detail Handover:</strong>
+          <div class="p-3 bg-slate-100 rounded-lg border text-slate-800 whitespace-pre-line">${log.notes}</div>
+        </div>
+
+        <!-- AUDIT TRAIL / TRACING INFO -->
+        <div class="bg-amber-50 border border-amber-200 p-2.5 rounded-lg text-[11px] text-amber-900 flex justify-between items-center">
+          <div><i class="fa-solid fa-clock-rotate-left mr-1"></i> Dibuat: <strong>${log.createdAt || log.date}</strong></div>
+          <div>Update Terakhir: <strong>${log.updatedAt || log.date}</strong></div>
+        </div>
+
+        ${log.photo ? `<div><strong class="text-slate-500 block mb-1">Lampiran Foto:</strong><img src="${log.photo}" class="w-full h-48 object-cover rounded-lg border shadow-sm"></div>` : ''}
+      `;
+      document.getElementById('detailModal').classList.remove('hidden');
+    }
+
+    function closeDetailModal() {
+      document.getElementById('detailModal').classList.add('hidden');
+    }
+
+    function sendWASummary() {
+      const today = new Date().toISOString().split('T')[0];
+      const pendingCount = handoverLogs.filter(l => l.status === 'Pending').length;
+      const inProgressCount = handoverLogs.filter(l => l.status === 'In Progress').length;
+      const urgentCount = handoverLogs.filter(l => l.priority === 'High' || l.priority === 'Urgent').length;
+
+      let text = `*RINGKASAN HANDOVER SHIFT SINOTRANS SPAREPART*\n`;
+      text += `📅 Tanggal: ${today}\n`;
+      text += `📊 Total Log: ${handoverLogs.length} | ⏳ Pending: ${pendingCount} | 🔄 In Progress: ${inProgressCount} | 🚨 Urgent: ${urgentCount}\n\n`;
+      text += `*DAFTAR ISU PENDING/URGENT:* \n`;
+
+      const criticalLogs = handoverLogs.filter(l => l.status !== 'Done');
+      if (criticalLogs.length === 0) {
+        text += `✅ Semua pekerjaan shift telah Selesai (Done).\n`;
+      } else {
+        criticalLogs.forEach((l, i) => {
+          text += `${i+1}. [${l.shift}] ${l.fromDept} ➔ ${l.toDept} | *${l.category}* (${l.itemLocation}) - Prioritas: *${l.priority}* - Status: *${l.status}*\n   _Catatan: ${l.notes}_\n`;
+        });
+      }
+
+      const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+      window.open(waUrl, '_blank');
+    }
+
+    function openConfigModal() {
+      document.getElementById('cfgBinId').value = BIN_ID;
+      document.getElementById('cfgMasterKey').value = MASTER_KEY;
+      document.getElementById('configModal').classList.remove('hidden');
+    }
+
+    function closeConfigModal() {
+      document.getElementById('configModal').classList.add('hidden');
+    }
+
+    function saveApiConfig() {
+      BIN_ID = document.getElementById('cfgBinId').value.trim();
+      MASTER_KEY = document.getElementById('cfgMasterKey').value.trim();
+      localStorage.setItem('sinotrans_bin_id', BIN_ID);
+      localStorage.setItem('sinotrans_master_key', MASTER_KEY);
+      closeConfigModal();
+      fetchCloudData();
+    }
+
+    function exportToCSV() {
+      if (handoverLogs.length === 0) return alert('Tidak ada data!');
+      let csv = 'Tanggal,Shift,Divisi Asal,Divisi Tujuan,Petugas Serah,Petugas Terima,Kategori,Prioritas,Part No / Lokasi,Catatan,Status,Waktu Created,Waktu Updated\n';
+      handoverLogs.forEach(l => {
+        csv += `"${l.date}","${l.shift}","${l.fromDept || 'Inventory'}","${l.toDept || 'Inventory'}","${l.sender}","${l.receiver}","${l.category}","${l.priority}","${l.itemLocation}","${l.notes.replace(/"/g, '""')}","${l.status}","${l.createdAt || ''}","${l.updatedAt || ''}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `Handover_Sinotrans_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+    }
+
+    function exportToPDF() {
+      document.getElementById('pdfPrintDate').innerText = new Date().toLocaleString('id-ID');
+      window.print();
+    }
+
+    function getSampleLogs() {
+      return [
+        {
+          id: 1,
+          date: new Date().toISOString().split('T')[0],
+          shift: 'Shift 1',
+          fromDept: 'Inbound',
+          toDept: 'Inventory',
+          sender: 'Ahmad',
+          receiver: 'Budi',
+          category: 'Stock Discrepancy',
+          priority: 'High',
+          itemLocation: 'PN 98213 / Rak B-04',
+          notes: 'Ditemukan fisik kurang 2 pcs saat putaway.',
+          status: 'Pending',
+          photo: '',
+          createdAt: new Date().toLocaleString('id-ID'),
+          updatedAt: new Date().toLocaleString('id-ID')
+        }
+      ];
+    }
+  </script>
+</body>
+</html>
